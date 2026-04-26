@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- ── Cursor ─────────────────────────────────────────────────────────── -->
+    <PreferenceCategory android:title="Cursor">
+
+        <SeekBarPreference
+            android:defaultValue="12"
+            android:key="cursor_speed"
+            android:max="50"
+            android:min="1"
+            android:title="Cursor Speed"
+            app:showSeekBarValue="true" />
+
+        <SeekBarPreference
+            android:defaultValue="8"
+            android:key="dead_zone"
+            android:max="30"
+            android:min="1"
+            android:title="Dead Zone"
+            android:summary="Stick threshold before cursor moves (×0.01)"
+            app:showSeekBarValue="true" />
+
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="acceleration_enabled"
+            android:summary="Slow stick = precise, fast stick = accelerated"
+            android:title="Acceleration" />
+
+    </PreferenceCategory>
+
+    <!-- ── Boost ─────────────────────────────────────────────────────────── -->
+    <PreferenceCategory android:title="Speed Boost (R Button)">
+
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="boost_toggle"
+            android:summary="OFF = hold R for boost | ON = R toggles boost"
+            android:title="Toggle Mode" />
+
+    </PreferenceCategory>
+
+    <!-- ── Scroll ─────────────────────────────────────────────────────────── -->
+    <PreferenceCategory android:title="Scroll">
+
+        <ListPreference
+            android:defaultValue="left_stick"
+            android:entries="@array/scroll_mode_entries"
+            android:entryValues="@array/scroll_mode_values"
+            android:key="scroll_mode"
+            android:title="Scroll Method" />
+
+        <SeekBarPreference
+            android:defaultValue="8"
+            android:key="scroll_speed"
+            android:max="30"
+            android:min="1"
+            android:title="Scroll Speed"
+            app:showSeekBarValue="true" />
+
+    </PreferenceCategory>
+
+    <!-- ── About ─────────────────────────────────────────────────────────── -->
+    <PreferenceCategory android:title="About">
+
+        <Preference
+            android:key="version"
+            android:selectable="false"
+            android:summary="v1.0.0"
+            android:title="Version" />
+
+        <Preference
+            android:key="button_map_info"
+            android:selectable="false"
+            android:title="Button Mapping"
+            android:summary="A=Tap | B=Back | X=Long Press | ZR=Double Tap\nHOME=Home | +=Recents | ─=Notifications\nRS click=Tap | R=Speed Boost" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
