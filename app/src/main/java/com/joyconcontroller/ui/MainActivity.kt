@@ -55,11 +55,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        registerReceiver(
-            statusReceiver,
-            IntentFilter(JoyConAccessibilityService.ACTION_STATUS),
-            RECEIVER_NOT_EXPORTED
-        )
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                statusReceiver,
+                IntentFilter(JoyConAccessibilityService.ACTION_STATUS),
+                RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            registerReceiver(
+                statusReceiver,
+                IntentFilter(JoyConAccessibilityService.ACTION_STATUS)
+            )
+        }
         // Refresh status on resume
         updateServiceStatus(JoyConAccessibilityService.instance != null)
         updateBluetoothStatus()
