@@ -1,19 +1,17 @@
 package com.joyconcontroller.ui
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.KeyEvent
-import android.view.MotionEvent
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
+import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.google.android.material.snackbar.Snackbar
@@ -55,19 +53,20 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        // Android 14 (API 34)+ requires explicit exported flag on registerReceiver
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(
                 statusReceiver,
                 IntentFilter(JoyConAccessibilityService.ACTION_STATUS),
                 RECEIVER_NOT_EXPORTED
             )
         } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
             registerReceiver(
                 statusReceiver,
                 IntentFilter(JoyConAccessibilityService.ACTION_STATUS)
             )
         }
-        // Refresh status on resume
         updateServiceStatus(JoyConAccessibilityService.instance != null)
         updateBluetoothStatus()
     }
@@ -123,8 +122,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateBluetoothStatus() {
-        val bm = getSystemService(BluetoothManager::class.java)
-        val btEnabled = bm?.adapter?.isEnabled == true
+        val btEnabled = try {
+            val bm = getSystemService(BLUETOOTH_SERVICE) as? BluetoothManager
+            bm?.adapter?.isEnabled == true
+        } catch (e: Exception) {
+            false
+        }
         binding.tvBluetoothStatus.text = if (btEnabled) {
             "✅ Bluetooth: On"
         } else {
