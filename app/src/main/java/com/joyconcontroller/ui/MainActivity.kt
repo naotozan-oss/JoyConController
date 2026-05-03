@@ -1,10 +1,12 @@
 package com.joyconcontroller.ui
 
+import android.Manifest
 import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -12,7 +14,9 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.google.android.material.snackbar.Snackbar
 import com.joyconcontroller.R
@@ -27,6 +31,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: AppPreferences
     private lateinit var inputHandler: JoyConInputHandler
+
+    // Runtime permission launcher for BLUETOOTH_CONNECT (Android 12+)
+    private val btPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        updateBluetoothStatus()
+        if (!granted) {
+            Snackbar.make(binding.root,
+                "Bluetooth permission needed to show BT status",
+                Snackbar.LENGTH_LONG).show()
+        }
+    }
 
     // Receive status broadcasts from service
     private val statusReceiver = object : BroadcastReceiver() {
@@ -105,6 +121,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkPermissions() {
+        // BLUETOOTH_CONNECT is a runtime permission on Android 12 (API 31)+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(
+                    this, Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                btPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+                return
+            }
+        }
         updateBluetoothStatus()
     }
 
@@ -123,15 +149,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateBluetoothStatus() {
         val btEnabled = try {
-            val bm = getSystemService(BLUETOOTH_SERVICE) as? BluetoothManager
-            bm?.adapter?.isEnabled == true
+            // On Android 12+, accessing adapter without BLUETOOTH_CONNECT throws SecurityException
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                ContextCompat.checkSelfPermission(
+                    this, Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                null // Permission not granted yet
+            } else {
+                val bm = getSystemService(BLUETOOTH_SERVICE) as? BluetoothManager
+                bm?.adapter?.isEnabled
+            }
+        } catch (e: SecurityException) {
+            null
         } catch (e: Exception) {
-            false
+            null
         }
-        binding.tvBluetoothStatus.text = if (btEnabled) {
-            "✅ Bluetooth: On"
-        } else {
-            "❌ Bluetooth: Off"
+
+        binding.tvBluetoothStatus.text = when (btEnabled) {
+            true  -> "✅ Bluetooth: On"
+            false -> "❌ Bluetooth: Off"
+            null  -> "⚠️ Bluetooth: Permission needed"
         }
     }
 
